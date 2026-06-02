@@ -1,0 +1,20 @@
+name: Release Drafter
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  draft-release:
+    name: Draft Release
+    runs-on: ubuntu-latest
+    steps:
+      # release-drafter/release-drafter@v6 — pinned SHA for supply chain safety
+      - uses: release-drafter/release-drafter@67e173cadb2fbd3de94f4a861e0c48c913b462ae
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,75 @@
+name: Labeler
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    name: Apply Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply labels from branch and PR title
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const title = pr.title ?? '';
+            const branch = pr.head.ref ?? '';
+
+            const rules = [
+              { label: 'feat',     pattern: /^feat[:(]/ },
+              { label: 'fix',      pattern: /^fix[:(]/ },
+              { label: 'docs',     pattern: /^docs[:(]/ },
+              { label: 'chore',    pattern: /^chore[:(]/ },
+              { label: 'ci',       pattern: /^ci[:(]/ },
+              { label: 'build',    pattern: /^build[:(]/ },
+              { label: 'perf',     pattern: /^perf[:(]/ },
+              { label: 'refactor', pattern: /^refactor[:(]/ },
+              { label: 'revert',   pattern: /^revert[:(]/ },
+              { label: 'style',    pattern: /^style[:(]/ },
+              { label: 'test',     pattern: /^test[:(]/ },
+            ];
+
+            const labels = new Set();
+
+            for (const { label, pattern } of rules) {
+              if (pattern.test(title) || pattern.test(branch)) {
+                labels.add(label);
+              }
+            }
+
+            if (labels.size === 0) return;
+
+            // Ensure labels exist in the repo before applying
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                });
+              } catch {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  color: 'ededed',
+                });
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [...labels],
+            });
