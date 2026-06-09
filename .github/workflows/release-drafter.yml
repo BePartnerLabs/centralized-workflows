@@ -16,5 +16,6 @@ jobs:
       - uses: release-drafter/release-drafter@67e173cadb2fbd3de94f4a861e0c48c913b462ae
         with:
           config-name: release-drafter.yml
+          commitish: main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
