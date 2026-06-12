@@ -1,0 +1,47 @@
+name: Sync Major Version Tag
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-major-tag:
+    name: Move vN tag to released commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move major version tag
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const tag = context.payload.release.tag_name        // e.g. "v1.2.3"
+            const major = tag.match(/^(v\d+)/)?.[1]             // e.g. "v1"
+            if (!major) {
+              core.setFailed(`Could not parse major version from tag "${tag}"`)
+              return
+            }
+
+            const sha = context.payload.release.target_commitish
+              || context.sha
+
+            // Delete the existing major tag (if any) then recreate it
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${major}`,
+              })
+            } catch {
+              // Tag didn't exist yet — that's fine for the first release
+            }
+
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${major}`,
+              sha,
+            })
+
+            core.info(`Moved ${major} → ${tag} (${sha})`)
