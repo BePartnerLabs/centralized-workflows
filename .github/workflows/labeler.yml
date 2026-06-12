@@ -12,9 +12,10 @@ jobs:
     name: Apply Labels
     runs-on: ubuntu-latest
     steps:
-      # actions/labeler@v6 pinned SHA for supply chain safety
-      - uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213
+      # fuxingloh/multi-labeler reads config from the org .github repo,
+      # so consumer repos need zero local labeler config.
+      - uses: fuxingloh/multi-labeler@v4
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/labeler.yml
-          sync-labels: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-repo: BePartnerLabs/.github
+          config-path: .github/labeler.yml
