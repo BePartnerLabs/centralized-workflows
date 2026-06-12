@@ -1,0 +1,29 @@
+name: Sync Major Version Tag
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-major-tag:
+    name: Move vN tag to released commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move major version tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          SHA: ${{ github.event.release.target_commitish }}
+        run: |
+          MAJOR=$(echo "$TAG" | grep -oP '^v\d+')
+          if [ -z "$MAJOR" ]; then
+            echo "Could not parse major version from tag '$TAG'" && exit 1
+          fi
+          gh api --method DELETE "repos/${{ github.repository }}/git/refs/tags/$MAJOR" || true
+          gh api --method POST "repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/tags/$MAJOR" \
+            -f sha="$SHA"
+          echo "Moved $MAJOR → $TAG ($SHA)"
