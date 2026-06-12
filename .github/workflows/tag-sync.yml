@@ -22,8 +22,10 @@ jobs:
           if [ -z "$MAJOR" ]; then
             echo "Could not parse major version from tag '$TAG'" && exit 1
           fi
-          gh api --method DELETE "repos/${{ github.repository }}/git/refs/tags/$MAJOR" || true
+          # Resolve the tag SHA (handles branch names like "main" as target_commitish)
+          RESOLVED_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/$TAG" --jq '.object.sha')
+          gh api --method DELETE "repos/${{ github.repository }}/git/refs/tags/$MAJOR" 2>/dev/null || true
           gh api --method POST "repos/${{ github.repository }}/git/refs" \
             -f ref="refs/tags/$MAJOR" \
-            -f sha="$SHA"
-          echo "Moved $MAJOR → $TAG ($SHA)"
+            -f sha="$RESOLVED_SHA"
+          echo "Moved $MAJOR → $TAG ($RESOLVED_SHA)"
