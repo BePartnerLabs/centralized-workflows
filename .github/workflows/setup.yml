@@ -1,0 +1,48 @@
+name: Setup — Install & Cache
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "22"
+    outputs:
+      store-path:
+        description: pnpm store path for cache key
+        value: ${{ jobs.setup.outputs.store-path }}
+      cache-key:
+        description: pnpm cache key
+        value: ${{ jobs.setup.outputs.cache-key }}
+
+jobs:
+  setup:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      store-path: ${{ steps.store.outputs.path }}
+      cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Get pnpm store path
+        id: store
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        id: pnpm-cache
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
