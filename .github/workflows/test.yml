@@ -15,6 +15,9 @@ on:
       test-command:
         type: string
         default: pnpm vitest run tests/unit
+      coverage:
+        type: boolean
+        default: false
 
 jobs:
   test:
@@ -34,3 +37,19 @@ jobs:
           key: ${{ inputs.cache-key }}
       - run: pnpm install --frozen-lockfile
       - run: ${{ inputs.test-command }}
+
+      - name: Coverage summary
+        if: ${{ inputs.coverage }}
+        run: |
+          SUMMARY=coverage/coverage-summary.json
+          if [ ! -f "$SUMMARY" ]; then echo "No coverage report found" >> $GITHUB_STEP_SUMMARY; exit 0; fi
+          echo "## Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | Statements | Branches | Functions | Lines |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          node -e "
+            const s = JSON.parse(require('fs').readFileSync('$SUMMARY'));
+            const t = s.total;
+            const pct = k => t[k].pct + '%';
+            console.log('| **Total** | ' + pct('statements') + ' | ' + pct('branches') + ' | ' + pct('functions') + ' | ' + pct('lines') + ' |');
+          " >> $GITHUB_STEP_SUMMARY
