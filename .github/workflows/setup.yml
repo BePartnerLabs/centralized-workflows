@@ -6,9 +6,6 @@ on:
       node-version:
         type: string
         default: "22"
-      pnpm-version:
-        type: string
-        default: "9"
     outputs:
       store-path:
         description: pnpm store path for cache key
@@ -27,9 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # pnpm/action-setup errors if BOTH an explicit version and package.json's
+      # "packageManager" field are present, even when they agree. Every repo
+      # is expected to pin "packageManager" in package.json (pnpm's own
+      # recommended practice) — the version is read from there.
       - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ inputs.pnpm-version }}
 
       - uses: actions/setup-node@v6
         with:
