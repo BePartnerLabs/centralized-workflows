@@ -23,32 +23,16 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `labeler.yml` | Auto-label PRs |
 | `tag-sync.yml` | Moves the major version tag (e.g. `v1`) when a release is published |
 
-### Deploying a Payload + Vercel project
+## Examples
 
-Wire one caller workflow with two triggers (push to `main` → preview, `release: published` → production), computing `environment`/`prod` from `github.event_name`:
+`examples/` has copy-pasteable caller workflows for each common setup — copy the file into `<your-repo>/.github/workflows/` and adjust as needed. They live outside `.github/workflows/` in *this* repo so GitHub doesn't try to run them here.
 
-```yaml
-on:
-  push: { branches: [main] }
-  release: { types: [published] }
-
-jobs:
-  migrate:
-    uses: BePartnerLabs/centralized-workflows/.github/workflows/migrate-payload.yml@v1
-    with:
-      environment: ${{ github.event_name == 'release' && 'production' || 'preview' }}
-    secrets: inherit
-
-  deploy:
-    needs: migrate
-    uses: BePartnerLabs/centralized-workflows/.github/workflows/deploy-vercel.yml@v1
-    with:
-      environment: ${{ github.event_name == 'release' && 'production' || 'preview' }}
-      prod: ${{ github.event_name == 'release' }}
-    secrets: inherit
-```
-
-A project with no Payload/DB migrations calls `deploy-vercel.yml` alone, skipping `migrate-payload.yml`.
+| File | Use case |
+|---|---|
+| `examples/ci.yml` | Lint + test on push/PR to `main` |
+| `examples/deploy-payload-vercel.yml` | Payload + Vercel — preview on push to `main`, production on release |
+| `examples/deploy-vercel-only.yml` | Vercel only, no DB/migrations |
+| `examples/release.yml` | PR auto-labeling + draft release notes |
 
 ## Release & tagging flow
 

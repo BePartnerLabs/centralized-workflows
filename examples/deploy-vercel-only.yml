@@ -1,0 +1,25 @@
+# Example: deploy a plain Vercel project with no database/migrations step
+# (no Payload, or any project that doesn't need migrate-payload.yml).
+#
+# Copy to <your-repo>/.github/workflows/deploy.yml. Requires: VERCEL_TOKEN,
+# VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/deploy-vercel.yml@v1
+    with:
+      environment: ${{ github.event_name == 'release' && 'production' || 'preview' }}
+      prod: ${{ github.event_name == 'release' }}
+    secrets: inherit

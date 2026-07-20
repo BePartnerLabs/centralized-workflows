@@ -1,0 +1,36 @@
+# Example: deploy a Payload CMS + Vercel project — preview on every push to
+# main, production when a GitHub release is published. One caller file, two
+# triggers; environment/prod are computed from github.event_name so nothing
+# is duplicated between the preview and production paths.
+#
+# Copy to <your-repo>/.github/workflows/deploy.yml. Requires these repo/org
+# secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID, PAYLOAD_SECRET,
+# DATABASE_URL (per-environment via GitHub Environments if they differ
+# between preview/production).
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate:
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/migrate-payload.yml@v1
+    with:
+      environment: ${{ github.event_name == 'release' && 'production' || 'preview' }}
+    secrets: inherit
+
+  deploy:
+    needs: migrate
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/deploy-vercel.yml@v1
+    with:
+      environment: ${{ github.event_name == 'release' && 'production' || 'preview' }}
+      prod: ${{ github.event_name == 'release' }}
+    secrets: inherit
