@@ -17,9 +17,22 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `setup.yml` | Install & cache pnpm dependencies — outputs `cache-key` and `store-path` |
 | `lint.yml` | Run `pnpm lint` |
 | `test.yml` | Run unit tests via configurable `test-command` input |
+| `migrate-payload.yml` | Pull Vercel env vars for `environment` and run `pnpm payload migrate` — Payload projects only |
+| `deploy-vercel.yml` | `vercel deploy` (optionally `--prod`) — generic, no Payload dependency, callable directly by non-Payload projects |
 | `release-drafter.yml` | Auto-draft releases from PR titles |
 | `labeler.yml` | Auto-label PRs |
 | `tag-sync.yml` | Moves the major version tag (e.g. `v1`) when a release is published |
+
+## Examples
+
+`examples/` has copy-pasteable caller workflows for each common setup — copy the file into `<your-repo>/.github/workflows/` and adjust as needed. They live outside `.github/workflows/` in *this* repo so GitHub doesn't try to run them here.
+
+| File | Use case |
+|---|---|
+| `examples/ci.yml` | Lint + test on push/PR to `main` |
+| `examples/deploy-payload-vercel.yml` | Payload + Vercel — preview on push to `main`, production on release |
+| `examples/deploy-vercel-only.yml` | Vercel only, no DB/migrations |
+| `examples/release.yml` | PR auto-labeling + draft release notes |
 
 ## Release & tagging flow
 

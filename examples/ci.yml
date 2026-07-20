@@ -1,0 +1,35 @@
+# Example: CI (lint + test) for any pnpm project.
+# Copy to <your-repo>/.github/workflows/ci.yml and adjust triggers/test-command.
+name: CI Lint and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/setup.yml@v1
+
+  lint:
+    needs: setup
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/lint.yml@v1
+    with:
+      cache-key: ${{ needs.setup.outputs.cache-key }}
+      store-path: ${{ needs.setup.outputs.store-path }}
+
+  test:
+    needs: setup
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/test.yml@v1
+    with:
+      cache-key: ${{ needs.setup.outputs.cache-key }}
+      store-path: ${{ needs.setup.outputs.store-path }}
+      test-command: pnpm test:coverage
+      coverage: true

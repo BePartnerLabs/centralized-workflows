@@ -1,0 +1,58 @@
+name: Migrate — Payload
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Vercel environment to pull env vars from and run migrations against (e.g. preview, production)
+        type: string
+        required: true
+      node-version:
+        type: string
+        default: "24"
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+      PAYLOAD_SECRET:
+        required: true
+      DATABASE_URL:
+        required: true
+
+jobs:
+  migrate:
+    name: Run DB migrations (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel env vars
+        run: pnpm vercel env pull .env.local --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Export env vars to GITHUB_ENV
+        run: grep -v '^#' .env.local | grep -v '^$' >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: pnpm payload migrate
+        env:
+          CI: true
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

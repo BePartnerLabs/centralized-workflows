@@ -1,0 +1,24 @@
+# Example: auto-label PRs and keep a draft release up to date from PR titles.
+# Copy each job to its own file, or keep together — GitHub treats every
+# top-level `on:` trigger independently either way.
+name: Release
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event_name == 'pull_request'
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/labeler.yml@v1
+
+  release:
+    if: github.event_name == 'push'
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/release-drafter.yml@v1

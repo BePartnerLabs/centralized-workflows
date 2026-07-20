@@ -1,0 +1,58 @@
+name: Deploy — Vercel
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Vercel environment name for the GitHub Environment + deployment (e.g. preview, production)
+        type: string
+        required: true
+      prod:
+        description: Deploy with `vercel deploy --prod`
+        type: boolean
+        default: false
+    outputs:
+      deploy-url:
+        description: The deployed URL
+        value: ${{ jobs.deploy.outputs.deploy-url }}
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to Vercel (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.deploy_url }}
+    outputs:
+      deploy-url: ${{ steps.deploy.outputs.deploy_url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy ${{ inputs.prod && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+      - name: Write job summary
+        run: |
+          echo "## ${{ inputs.prod && '🚀 Production' || '🔍 Preview' }} Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deploy URL** | ${{ steps.deploy.outputs.deploy_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Ref** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
