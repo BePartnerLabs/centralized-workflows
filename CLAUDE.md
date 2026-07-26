@@ -17,7 +17,7 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `setup.yml` | Install & cache pnpm dependencies — outputs `cache-key` and `store-path` |
 | `lint.yml` | Run `pnpm lint` |
 | `test.yml` | Run unit tests via configurable `test-command` input |
-| `migrate-payload.yml` | Pull Vercel env vars for `environment` and run `pnpm payload migrate` — Payload projects only |
+| `migrate-payload.yml` | Run `pnpm payload migrate` against `environment`'s `PAYLOAD_SECRET`/`DATABASE_URL` secrets — Payload projects only |
 | `deploy-vercel.yml` | `vercel deploy` (optionally `--prod`) — generic, no Payload dependency, callable directly by non-Payload projects |
 | `release-drafter.yml` | Auto-draft releases from PR titles |
 | `labeler.yml` | Auto-label PRs |
