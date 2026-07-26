@@ -11,6 +11,10 @@ on:
         description: Deploy with `vercel deploy --prod`
         type: boolean
         default: false
+      vercel-cli-version:
+        description: Pinned vercel CLI version to avoid unannounced breaking changes
+        type: string
+        default: "57.0.0"
     outputs:
       deploy-url:
         description: The deployed URL
@@ -39,7 +43,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+        run: npm install -g vercel@${{ inputs.vercel-cli-version }}
 
       - name: Deploy to Vercel
         id: deploy

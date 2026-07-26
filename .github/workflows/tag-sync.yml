@@ -16,7 +16,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.release.tag_name }}
-          SHA: ${{ github.event.release.target_commitish }}
         run: |
           MAJOR=$(echo "$TAG" | grep -oP '^v\d+')
           if [ -z "$MAJOR" ]; then
