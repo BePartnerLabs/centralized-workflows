@@ -5,7 +5,7 @@ on:
     inputs:
       node-version:
         type: string
-        default: "22"
+        default: "24"
       cache-key:
         type: string
         required: true
@@ -27,5 +27,6 @@ jobs:
         with:
           path: ${{ inputs.store-path }}
           key: ${{ inputs.cache-key }}
+          restore-keys: ${{ runner.os }}-pnpm-
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint

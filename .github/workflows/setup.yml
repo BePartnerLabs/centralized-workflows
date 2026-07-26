@@ -5,7 +5,7 @@ on:
     inputs:
       node-version:
         type: string
-        default: "22"
+        default: "24"
     outputs:
       store-path:
         description: pnpm store path for cache key
