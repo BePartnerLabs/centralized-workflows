@@ -39,6 +39,10 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # Passed via the environment, not `--token=`: a flag lands in the
+      # process argument list, readable by anything on the runner that can
+      # see /proc or that logs argv. The CLI picks VERCEL_TOKEN up on its own.
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v7
 
@@ -48,7 +52,7 @@ jobs:
       - name: Deploy to Vercel
         id: deploy
         run: |
-          DEPLOY_URL=$(vercel deploy ${{ inputs.prod && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_URL=$(vercel deploy ${{ inputs.prod && '--prod' || '' }})
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
 
       - name: Write job summary
