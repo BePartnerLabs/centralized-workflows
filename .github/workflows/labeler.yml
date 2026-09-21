@@ -1,5 +1,11 @@
 name: Labeler
 
+# Runners fijados a 24.04 a proposito: `ubuntu-latest` pasa a Ubuntu 26 desde el
+# 19 de octubre de 2026. Estos workflows los consume toda la organizacion como
+# `@v1`, asi que una mudanza sorpresa del runner rompe el CI de todos los repos
+# a la vez. Fijarlo no evita la mudanza: elige cuando. **Revisar antes de
+# octubre de 2026** — un runner fijado y olvidado tambien caduca.
+
 on:
   workflow_call:
   pull_request:
@@ -12,12 +18,13 @@ permissions:
 jobs:
   label:
     name: Apply Labels
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      # fuxingloh/multi-labeler@v4 — pinned SHA for supply chain safety.
+      # fuxingloh/multi-labeler@v5.0.0 — pinned SHA for supply chain safety.
+      # v5 es v4 en node24; el anterior era b15a5446.
       # Reads config from the org .github repo, so consumer repos need zero
       # local labeler config.
-      - uses: fuxingloh/multi-labeler@b15a54460c38f54043fa75f7b08a0e2aa5b94b5b
+      - uses: fuxingloh/multi-labeler@bcd50af464202999e57f556b4aefcf05a34abf85
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           config-repo: BePartnerLabs/.github

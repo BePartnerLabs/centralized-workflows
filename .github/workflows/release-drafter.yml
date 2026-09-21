@@ -1,5 +1,11 @@
 name: Release Drafter
 
+# Runners fijados a 24.04 a proposito: `ubuntu-latest` pasa a Ubuntu 26 desde el
+# 19 de octubre de 2026. Estos workflows los consume toda la organizacion como
+# `@v1`, asi que una mudanza sorpresa del runner rompe el CI de todos los repos
+# a la vez. Fijarlo no evita la mudanza: elige cuando. **Revisar antes de
+# octubre de 2026** — un runner fijado y olvidado tambien caduca.
+
 on:
   workflow_call:
   push:
@@ -13,10 +19,11 @@ permissions:
 jobs:
   draft-release:
     name: Draft Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      # release-drafter/release-drafter@v6 — pinned SHA for supply chain safety
-      - uses: release-drafter/release-drafter@67e173cadb2fbd3de94f4a861e0c48c913b462ae
+      # release-drafter/release-drafter@v7.7.0 — pinned SHA for supply chain safety.
+      # v7 dejo node20 por node24; el v6 anterior era 67e173ca.
+      - uses: release-drafter/release-drafter@d749bd2b1d1e1db5c7a422e645f7e4ec23f604e3
         with:
           config-name: release-drafter.yml
           commitish: main
