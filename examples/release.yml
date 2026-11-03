@@ -22,3 +22,6 @@ jobs:
   release:
     if: github.event_name == 'push'
     uses: BePartnerLabs/centralized-workflows/.github/workflows/release-drafter.yml@v1
+    # Only if the default branch isn't `main` (also change `push.branches` above):
+    # with:
+    #   commitish: master

@@ -1,0 +1,32 @@
+name: Self test
+
+# Tests de los scripts que este repo le corre a los demas (sin dependencias).
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/self-test.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/**"
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Scripts
+    runs-on: ubuntu-24.04
+    steps:
+      # actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      # actions/setup-node@v6.5.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "26"
+      - run: node --test scripts/

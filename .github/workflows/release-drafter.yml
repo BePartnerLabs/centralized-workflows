@@ -2,6 +2,11 @@ name: Release Drafter
 
 on:
   workflow_call:
+    inputs:
+      commitish:
+        description: Rama donde se arma el borrador (main, master, ...)
+        type: string
+        default: main
   push:
     branches:
       - main
@@ -19,6 +24,6 @@ jobs:
       - uses: release-drafter/release-drafter@67e173cadb2fbd3de94f4a861e0c48c913b462ae
         with:
           config-name: release-drafter.yml
-          commitish: main
+          commitish: ${{ inputs.commitish || 'main' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
