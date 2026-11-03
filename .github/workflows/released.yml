@@ -1,0 +1,35 @@
+name: Released
+
+# Este repo usa su propio release-to-project: al publicar un release (el mismo
+# evento con el que tag-sync mueve `v1`) las historias de sus PRs pasan a
+# Released en el project 6 "BPL · Infra". Llama al workflow local, asi prueba
+# exactamente el commit que se esta publicando.
+#
+# Requiere el secret PROJECT_TOKEN (fine-grained: Contents read, Issues
+# read/write, Pull requests read, Projects read/write de la organizacion).
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag a marcar como Released (ej. v1.4.0)
+        required: true
+      dry-run:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  released:
+    uses: ./.github/workflows/release-to-project.yml
+    with:
+      project-owner: BePartnerLabs
+      project-number: 6
+      tag: ${{ inputs.tag || github.event.release.tag_name }}
+      dry-run: ${{ inputs.dry-run || false }}
+    secrets:
+      project-token: ${{ secrets.PROJECT_TOKEN }}

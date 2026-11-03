@@ -23,6 +23,7 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `release-to-project.yml` | Move stories closed by a release's PRs to "Released" in a Project v2 (IDs resolved by name; runs `scripts/release-to-project.mjs` from this repo at `job.workflow_sha`). `bump-issue` mode sets Work type = Bump |
 | `labeler.yml` | Auto-label PRs |
 | `tag-sync.yml` | Moves the major version tag (e.g. `v1`) when a release is published |
+| `released.yml` | This repo's own caller of `release-to-project` → project 6 "BPL · Infra" (needs `PROJECT_TOKEN`) |
 
 ## Examples
 
@@ -39,6 +40,10 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 ## Scripts
 
 `scripts/` holds the Node scripts that reusable workflows run in the caller's job (no dependencies). Tests: `node --test scripts/` — run by `self-test.yml` on PRs.
+
+## Project
+
+Work is tracked in the org project **6 "BPL · Infra"** (https://github.com/orgs/BePartnerLabs/projects/6), shared with `bpl-ds`, `.github` and `bpl-context-manager`. Every PR closes its issue with `Closes #N` — that's how `released.yml` finds what to move to Released.
 
 ## Release & tagging flow
 
