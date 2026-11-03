@@ -9,7 +9,7 @@ on:
         required: true
       node-version:
         type: string
-        default: "24"
+        default: "26"
     secrets:
       PAYLOAD_SECRET:
         required: true
