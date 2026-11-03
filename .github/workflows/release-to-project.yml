@@ -1,0 +1,120 @@
+name: Release to Project
+
+# Mueve a "Released" (o la opcion que se pase) las historias cerradas por los PRs
+# de un release, en un GitHub Project v2, y comenta "Released in <tag>" en cada
+# issue. Con `bump-issue` hace otra cosa: marca ese issue como Work type = Bump
+# (y Site, si se pasa `site-option`), para dependency-review.
+#
+# Los IDs del project, del campo y de la opcion se resuelven por nombre al
+# ejecutarse: un project recreado o copiado sigue funcionando sin tocar nada.
+#
+# El script vive en este repo (scripts/release-to-project.mjs): el job hace
+# checkout de centralized-workflows en el mismo commit del workflow que llamo el
+# caller (`job.workflow_sha`), asi `@v1` y el script siempre van juntos. Los
+# repos que llaman no necesitan tener el script.
+#
+# `project-token`: el github.token no llega a los projects de la organizacion.
+# Fine-grained con Contents read, Issues read/write, Pull requests read y
+# Projects read/write sobre el owner del project.
+#
+# Runner fijado a 24.04 a proposito, igual que el resto de los workflows.
+
+on:
+  workflow_call:
+    inputs:
+      project-owner:
+        description: Login de la organizacion o usuario duenio del project
+        type: string
+        required: true
+      project-number:
+        description: Numero del project (el de la URL)
+        type: number
+        required: true
+      tag:
+        description: Tag del release. Obligatorio salvo con bump-issue.
+        type: string
+        default: ""
+      status-field:
+        type: string
+        default: Status
+      released-option:
+        type: string
+        default: Released
+      dry-run:
+        description: Solo loguea lo que haria, sin escribir
+        type: boolean
+        default: false
+      bump-issue:
+        description: Modo bump. Numero del issue a marcar; ignora `tag`.
+        type: string
+        default: ""
+      work-type-field:
+        type: string
+        default: Work type
+      bump-option:
+        type: string
+        default: Bump
+      site-field:
+        type: string
+        default: Site
+      site-option:
+        description: Opcion de Site en modo bump; vacio = no toca Site
+        type: string
+        default: ""
+      node-version:
+        type: string
+        default: "26"
+    secrets:
+      project-token:
+        required: true
+
+# Todo lo que escribe va con `project-token`; el github.token solo hace checkout.
+permissions:
+  contents: read
+
+jobs:
+  release-to-project:
+    name: Release to Project
+    runs-on: ubuntu-24.04
+    steps:
+      # actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Sin el fallback, un contexto `job` vacio haria checkout del repo
+          # que llama, donde el script no existe.
+          repository: ${{ job.workflow_repository || 'BePartnerLabs/centralized-workflows' }}
+          ref: ${{ job.workflow_sha || 'v1' }}
+          path: .centralized-workflows
+          persist-credentials: false
+      # El script no tiene dependencias: no hace falta instalar nada.
+      # actions/setup-node@v6.5.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Run
+        env:
+          GH_TOKEN: ${{ secrets.project-token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PROJECT_OWNER: ${{ inputs.project-owner }}
+          PROJECT_NUMBER: ${{ inputs.project-number }}
+          STATUS_FIELD: ${{ inputs.status-field }}
+          RELEASED_OPTION: ${{ inputs.released-option }}
+          WORK_TYPE_FIELD: ${{ inputs.work-type-field }}
+          BUMP_OPTION: ${{ inputs.bump-option }}
+          SITE_FIELD: ${{ inputs.site-field }}
+          SITE_OPTION: ${{ inputs.site-option }}
+          TAG: ${{ inputs.tag }}
+          BUMP_ISSUE: ${{ inputs.bump-issue }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          script=.centralized-workflows/scripts/release-to-project.mjs
+          if [ -n "$BUMP_ISSUE" ]; then
+            node "$script" --bump "$BUMP_ISSUE"
+          elif [ -n "$TAG" ]; then
+            flags=()
+            [ "$DRY_RUN" = "true" ] && flags+=(--dry-run)
+            node "$script" "$TAG" "${flags[@]}"
+          else
+            echo "::error::falta el input tag (o bump-issue)"
+            exit 2
+          fi

@@ -1,0 +1,65 @@
+# Example: when a release reaches production, move the stories its PRs closed to
+# "Released" in a GitHub Project v2 and comment "Released in <tag>" on each one.
+#
+# "Released" means "in production", not "release published": that's why this
+# waits for the Deploy workflow to finish OK for the release event. If the repo
+# has no Deploy workflow, trigger on `release: types: [published]` instead and
+# pass `tag: ${{ github.event.release.tag_name }}`.
+#
+# Copy to <your-repo>/.github/workflows/release-to-project.yml. Requires the
+# PROJECT_TOKEN secret: fine-grained, Contents read, Issues read/write, Pull
+# requests read, and Projects read/write on the project's owner (github.token
+# can't reach organization projects). Project/field/option IDs are resolved by
+# name at runtime — nothing to hardcode.
+name: Release to project
+
+on:
+  workflow_run:
+    workflows: ["Deploy"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to mark as Released (e.g. v1.4.0)
+        required: true
+      dry-run:
+        description: Only log what it would do
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  released:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release')
+    uses: BePartnerLabs/centralized-workflows/.github/workflows/release-to-project.yml@v1
+    with:
+      project-owner: BePartnerLabs
+      project-number: 5
+      # The release tag is the head_branch of the Deploy run.
+      tag: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+      dry-run: ${{ inputs.dry-run || false }}
+      # Optional, shown with their defaults:
+      # status-field: Status
+      # released-option: Released
+    secrets:
+      project-token: ${{ secrets.PROJECT_TOKEN }}
+
+# Bump mode (for a dependency-review job): sets Work type = Bump, and Site if
+# `site-option` is given, on an issue. Retries ~30s while the project's
+# auto-add picks the issue up.
+#
+#  mark-bump:
+#    needs: review
+#    if: needs.review.outputs.issue != ''
+#    uses: BePartnerLabs/centralized-workflows/.github/workflows/release-to-project.yml@v1
+#    with:
+#      project-owner: BePartnerLabs
+#      project-number: 4
+#      bump-issue: ${{ needs.review.outputs.issue }}
+#      site-option: Amerikiosks
+#    secrets:
+#      project-token: ${{ secrets.PROJECT_TOKEN }}

@@ -19,7 +19,8 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `test.yml` | Run unit tests via configurable `test-command` input |
 | `migrate-payload.yml` | Run `pnpm payload migrate` against `environment`'s `PAYLOAD_SECRET`/`DATABASE_URL` secrets — Payload projects only |
 | `deploy-vercel.yml` | `vercel deploy` (optionally `--prod`) — generic, no Payload dependency, callable directly by non-Payload projects |
-| `release-drafter.yml` | Auto-draft releases from PR titles |
+| `release-drafter.yml` | Auto-draft releases from PR titles — `commitish` input (default `main`) for repos on `master` |
+| `release-to-project.yml` | Move stories closed by a release's PRs to "Released" in a Project v2 (IDs resolved by name; runs `scripts/release-to-project.mjs` from this repo at `job.workflow_sha`). `bump-issue` mode sets Work type = Bump |
 | `labeler.yml` | Auto-label PRs |
 | `tag-sync.yml` | Moves the major version tag (e.g. `v1`) when a release is published |
 
@@ -33,6 +34,11 @@ uses: BePartnerLabs/centralized-workflows/.github/workflows/<name>.yml@v1
 | `examples/deploy-payload-vercel.yml` | Payload + Vercel — preview on push to `main`, production on release |
 | `examples/deploy-vercel-only.yml` | Vercel only, no DB/migrations |
 | `examples/release.yml` | PR auto-labeling + draft release notes |
+| `examples/release-to-project.yml` | Stories → "Released" after the release deploy succeeds |
+
+## Scripts
+
+`scripts/` holds the Node scripts that reusable workflows run in the caller's job (no dependencies). Tests: `node --test scripts/` — run by `self-test.yml` on PRs.
 
 ## Release & tagging flow
 
