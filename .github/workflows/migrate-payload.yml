@@ -1,5 +1,11 @@
 name: Migrate — Payload
 
+# Runners fijados a 24.04 a proposito: `ubuntu-latest` pasa a Ubuntu 26 desde el
+# 19 de octubre de 2026. Estos workflows los consume toda la organizacion como
+# `@v1`, asi que una mudanza sorpresa del runner rompe el CI de todos los repos
+# a la vez. Fijarlo no evita la mudanza: elige cuando. **Revisar antes de
+# octubre de 2026** — un runner fijado y olvidado tambien caduca.
+
 on:
   workflow_call:
     inputs:
@@ -19,7 +25,7 @@ on:
 jobs:
   migrate:
     name: Run DB migrations (${{ inputs.environment }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
